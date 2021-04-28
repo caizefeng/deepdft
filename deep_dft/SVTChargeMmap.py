@@ -10,6 +10,7 @@
 import argparse
 import math
 import os
+import sys
 import warnings
 
 import numpy as np
@@ -18,8 +19,9 @@ from torch import nn, optim
 from torch.utils.data import DataLoader, ConcatDataset
 from torch.utils.tensorboard import SummaryWriter
 
-from ML_utils import standardization2D, evaluate_loss
-from datasets import MmapDataset2D
+from deep_dft.utils.ML_utils import standardization2D, evaluate_loss
+from deep_dft.utils.datasets import MmapDataset2D
+from deep_dft.utils.fs_utils import mkdir_without_override
 
 warnings.filterwarnings("ignore")
 
@@ -31,8 +33,11 @@ parser.add_argument("-d", "--dropout_prob", nargs="+", type=float, default=[0.0,
 
 parser.add_argument("-D", "--data_dir", default="/public/WORK_backup/caizefeng/Datasets/STO_600_cut9_gauss16")
 parser.add_argument("--device", default="cuda:1")
+parser.add_argument("-u", "--runs_dir", default=os.path.dirname(sys.path[0]))
 args = parser.parse_args()
 
+mkdir_without_override(os.path.join(args.runs_dir, "nets"))
+mkdir_without_override(os.path.join(args.runs_dir, "runs"))
 device = torch.device(args.device if torch.cuda.is_available() else 'cpu')
 num_element = 3
 sigma_size = 16
@@ -46,9 +51,9 @@ else:
 
 
 # MLP
-class SVTNetCharge(nn.Module):
+class SVTNetCharge_naive(nn.Module):
     def __init__(self, num_element, sigma_size, dropout_prob, fc_list=None, ):
-        super(SVTNetCharge, self).__init__()
+        super(SVTNetCharge_naive, self).__init__()
         if fc_list is None:
             fc_list = [300, 300, 300]
         self.fc = nn.Sequential(
@@ -86,12 +91,11 @@ run_name = '_'.join(('SVTCharge',
                      # "unstand",
                      ))
 
-train_writer = SummaryWriter('_'.join(("runs/" + run_name, "train"
-                                       )))
-test_writer = SummaryWriter('_'.join(("runs/" + run_name, "val"
-                                      )))
+runs_path = os.path.join(args.runs_dir, "runs", run_name)
+train_writer = SummaryWriter('_'.join((runs_path, "train")))
+test_writer = SummaryWriter('_'.join((runs_path, "val")))
 
-net = SVTNetCharge(num_element=num_element, sigma_size=sigma_size, dropout_prob=train_hp["dropout_prob"]).to(
+net = SVTNetCharge_naive(num_element=num_element, sigma_size=sigma_size, dropout_prob=train_hp["dropout_prob"]).to(
     torch.float64)
 criterion = nn.MSELoss()
 optimizer = optim.Adam(net.parameters(), lr=train_hp["lr"])
@@ -119,8 +123,8 @@ train_iter = DataLoader(dataset_train, **dataload_hp)
 
 # calculate mean and std over the whole training set
 train_iter_more = DataLoader(dataset_train, **dataload_hp_test)
-train_mean, train_std = standardization2D(read_saved=True, data_path=data_dir, train_iter_more=train_iter_more,
-                                          num_feature=num_feature)
+train_mean, train_std = standardization2D(read_saved=True, data_path=data_dir, num_feature=num_feature,
+                                          train_iter_mmap=train_iter_more)
 
 # training
 training_loss, batch_count = 0.0, 0
@@ -156,9 +160,10 @@ for epoch in range(train_hp["num_epoch"]):
 
 print('Finished Training')
 
-torch.save(net.state_dict(), os.path.join("nets", run_name + ".pt"))
+torch.save(net.state_dict(), os.path.join(args.runs_dir, "nets", run_name + "_state_dict.pt"))
+torch.save(net, os.path.join(args.runs_dir, "nets", run_name + ".pt"))
 
-# net2 = SVTNetCharge(num_element=3, sigma_size=16).to(torch.float64)
+# net2 = SVTNetCharge_naive(num_element=3, sigma_size=16).to(torch.float64)
 # net2.load_state_dict(torch.load(PATH))
 
 train_writer.flush()

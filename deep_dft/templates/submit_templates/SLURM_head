@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# set name of job
+#SBATCH --job-name=$name
+
+# set account of job
+#SBATCH --account=materialism
+
+# set partition
+#SBATCH --partition=$queue
+
+# set max wallclock time
+#SBATCH --time=$time
+
+# set memory required per allocated CPU
+##SBATCH --mem-per-cpu=2560
+
+# set the number of nodes
+#SBATCH --nodes=$nodes
+
+# set the number of tasks (processes) per node
+#SBATCH --ntasks-per-node=$ppn
+
+## Do some work:
+ulimit -s unlimited
+$export

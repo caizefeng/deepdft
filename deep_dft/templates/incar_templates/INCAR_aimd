@@ -1,0 +1,38 @@
+#INCAR for AIMD calculation for DeepDFT
+Global Parameters
+  ISTART =  0            (Read existing wavefunction; if there)
+  # ISPIN =  2           (Spin polarised DFT)
+  # ICHARG =  11         (Non-self-consistent: GGA/LDA band structures)
+  LREAL  = Auto       (Projection operators: automatic)
+  # ENCUT  =  400        (Cut-off energy for plane wave basis set, in eV)
+  PREC   =  Normal       (Precision level)
+  LWAVE  = .FALSE.        (Write WAVECAR or not)
+  LCHARG = .FALSE.        (Write CHGCAR or not)
+  ADDGRID= .TRUE.        (Increase grid; helps GGA convergence)
+  # LVTOT  = .TRUE.      (Write total electrostatic potential into LOCPOT or not)
+  # LVHAR  = .TRUE.      (Write ionic + Hartree electrostatic potential into LOCPOT or not)
+  # NELECT =             (No. of electrons: charged cells; be careful)
+  # LPLANE = .TRUE.      (Real space distribution; supercells)
+  NPAR   = 4           (Max is no. nodes; don't set for hybrids)
+  # NWRITE = 2           (Medium-level output)
+  # KPAR   = 2           (Divides k-grid into separate groups)
+  # NGX    = 500         (FFT grid mesh density for nice charge/potential plots)
+  # NGY    = 500         (FFT grid mesh density for nice charge/potential plots)
+  # NGZ    = 500         (FFT grid mesh density for nice charge/potential plots)
+ 
+Electronic Relaxation
+  ISMEAR =  0
+  SIGMA  =  0.1
+  EDIFF  =  1E-05
+ 
+Molecular Dynamics
+  IBRION =  0            (Activate MD)
+  NSW    =  20000          (Max ionic steps)
+  EDIFFG = -1E-02        (Ionic convergence; eV/A)
+  POTIM  =  1            (Timestep in fs)
+  SMASS  =  0            (MD Algorithm: -3-microcanonical ensemble; 0-canonical ensemble)
+  TEBEG  =     600     (Start temperature K)
+  TEEND  =     600     (Final temperature K)
+  ! MDALGO =  1          (Andersen Thermostat)
+  ! ISYM   =  0          (Symmetry: 0=none; 2=GGA; 3=hybrids)
+ 

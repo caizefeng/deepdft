@@ -1,0 +1,45 @@
+DATE1=$$(date)
+# --- will be completed by Python --------------------------
+window_interval=
+num_grid_half=
+# ----------------------------------------------------------
+rm ../LDOS_all -rf
+mkdir ../LDOS_all
+rm POSCAR LOCPOT CHG CHGCAR PCDAT WAVECAR XDATCAR PROCAR OSZICAR DOSCAR EIGENVAL IBZKPT CONTCAR OUTCAR vasprun.xml -f
+
+for i in POSCAR_*
+do
+    # must begin with a calculation without wavecar
+    cp "$$i" POSCAR
+    cp ../CHGCAR_all/CHGCAR_"$${i#*_}" CHGCAR
+    echo "$$i"
+    echo -------------------------------------------------------------
+    mkdir ../LDOS_all/LDOS_"$${i#*_}"
+    sed -i '/EINT/d' INCAR
+
+    $vasp_call
+    fermi=$$(sed -n 6p DOSCAR | awk '{print $$4}')
+
+    for j in $$(seq -"$$num_grid_half" "$$num_grid_half")
+    do
+        EINT_MID=$$(echo "scale=4 ; $$fermi + $$j * $$window_interval" | bc -l)
+        sed -i '/EINT/d' INCAR
+        EINT_BOTTOM=$$(echo "scale=4; $$EINT_MID - $$window_interval / 2" | bc -l)
+        EINT_TOP=$$(echo "scale=4; $$EINT_MID + $$window_interval / 2" | bc -l)
+        sed -i '$$aEINT = '$$EINT_BOTTOM' '$$EINT_TOP'' INCAR
+        cp ../CHGCAR_all/CHGCAR_"$${i#*_}" CHGCAR
+
+        $vasp_call
+
+        relative_E=$$(echo "scale=4; $$EINT_MID - $$fermi" | bc -l)
+        mv PARCHG ../LDOS_all/LDOS_"$${i#*_}"/PARCHG_"$${i#*_}"_"$$relative_E"
+    done
+
+    echo -------------------------------------------------------------
+    rm POSCAR LOCPOT CHG CHGCAR PCDAT WAVECAR XDATCAR PROCAR OSZICAR DOSCAR EIGENVAL IBZKPT CONTCAR OUTCAR vasprun.xml -f
+done
+
+
+DATE2=$$(date)
+echo -e "starting at:" "\t" "$$DATE1" >> timing.log
+echo -e "ending at:" "\t" "$$DATE2" >> timing.log

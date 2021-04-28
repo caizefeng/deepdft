@@ -7,13 +7,13 @@
 
 
 import math
-
+import numpy as np
 import torch
 
 
-# determine the number of the needed padding in each lattice direction
-# according to the point-to-plane distance and cutoff in each direction
 def padding_from_cutoff(vec, cutoff=9):
+    """determine the number of the needed padding in each lattice direction
+    according to the point-to-plane distance and cutoff in each direction"""
     device = vec.device
     volume = torch.det(vec)
 
@@ -25,9 +25,9 @@ def padding_from_cutoff(vec, cutoff=9):
     return padding
 
 
-# padding the addtional cells to satisfy periodic boundary condition
-# (inputs are cartesian coordinates and lattice vectors)
 def PBC_padding(coor, vec, cutoff=9):
+    """padding the addtional cells to satisfy periodic boundary condition
+    (inputs are cartesian coordinates and lattice vectors)"""
     device = coor.device
     padding = padding_from_cutoff(vec, cutoff)
     lattice_num_1 = padding[0] * 2 + 1
@@ -52,8 +52,8 @@ def PBC_padding(coor, vec, cutoff=9):
     return coor_PBC
 
 
-# generate the coordinates of grid by splitting the cell linearly
 def grid_gen(ngxf, ngyf, ngzf, vec):
+    """generate the coordinates of grid by splitting the cell linearly"""
     grid_4d = torch.stack(torch.meshgrid(torch.linspace(0, 1, ngzf + 1)[:-1],
                                          torch.linspace(0, 1, ngyf + 1)[:-1],
                                          torch.linspace(0, 1, ngxf + 1)[:-1]))
@@ -62,8 +62,8 @@ def grid_gen(ngxf, ngyf, ngzf, vec):
     return grid_coor
 
 
-# generate a tensor used to product with the input to representing cutoff function
 def cutoff_gen(tensor_in, *r_cutoff, simple_cut=True):
+    """ generate a tensor used to product with the input to representing cutoff function"""
     device = tensor_in.device
     if simple_cut:
         return torch.where(tensor_in < r_cutoff[0], torch.tensor(1, device=device), torch.tensor(0, device=device))
@@ -73,8 +73,9 @@ def cutoff_gen(tensor_in, *r_cutoff, simple_cut=True):
         return 1 / 2 * torch.cos(math.pi * (tensor_in - r_cs) / (r_cut - r_cs)) + 1 / 2
 
 
-# transfer all data from NDArray to torch.Tensor
 def np2torch(vec, coor_list, chg, device=None):
+    """ transfer all data from NDArray to torch.Tensor"""
+
     if device is None:
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     return torch.from_numpy(vec).to(device), \
@@ -82,14 +83,14 @@ def np2torch(vec, coor_list, chg, device=None):
            torch.from_numpy(chg).to(device)
 
 
-# change primitive date in lattice coordinate (VASP default) to Cartesian coordinate
 def dir2cart(vec, coor_list):
+    """change primitive date in lattice coordinate (VASP default) to Cartesian coordinate"""
     return [coor.matmul(vec) for coor in coor_list]
 
 
-# generate the difference of coordinates in 3 components x y z.
-# fill the 1st layer of dist_arr by cross distance between grid coordinates and atom coordinates
 def dist_gen(grid_coor, atom_coor):
+    """generate the difference of coordinates in 3 components x y z.
+    fill the 1st layer of dist_arr by cross distance between grid coordinates and atom coordinates"""
     device = grid_coor.device
     dist_arr = torch.zeros(grid_coor.size()[0], atom_coor.size()[0], 4, device=device)
     for axis in range(3):
@@ -99,25 +100,35 @@ def dist_gen(grid_coor, atom_coor):
     return dist_arr
 
 
-# split array into batches(tuple) to prevent memory error when processing it to generate descriptors
 def batch_gen(input_arr, batch_size):
+    """split array into batches(tuple) to prevent memory error when processing it to generate descriptors"""
     # batch_num = dist_arr.size()[0] // batch_size + 1
     return torch.split(input_arr, batch_size, dim=0)
 
 
-# divide charge values in CHGCAR by volumn of cell to generate real density
 def charge_label(vec, chg, ngxf, ngyf, ngzf):
+    """divide charge values in CHGCAR by volumn of cell to generate real density"""
     cell_volume = torch.det(vec)
     chg_den_flat = chg.flatten() / cell_volume
-    # the number of values in `chg` is completed to a multiple of 5
+    # the number of values in `chg` is completed to a multiple of 5/10
     # for convenience, now is the time to strip them away
     true_chg_den_flat = chg_den_flat[0:ngxf * ngyf * ngzf]
     charge_arr = true_chg_den_flat.view(-1, 1)
     return charge_arr
 
 
-# generate the rudiment array with rotation-variant data, used to generate invariant feature
+def charge_label_numpy(vec, chg, ngxf, ngyf, ngzf):
+    cell_volume = np.linalg.det(vec)
+    chg_den_flat = chg.flatten() / cell_volume
+    # the number of values in `chg` is completed to a multiple of 5/10
+    # for convenience, now is the time to strip them away
+    true_chg_den_flat = chg_den_flat[0:ngxf * ngyf * ngzf]
+    charge_arr = true_chg_den_flat.reshape(-1, 1)
+    return charge_arr
+
+
 def des_initial_gen(dist_arr, sigmas, cutoff_distance):
+    """generate the rudiment array with rotation-variant data, used to generate invariant feature"""
     device = dist_arr.device
     sigma_size = sigmas.numel()
     s_ini = torch.zeros(dist_arr.size()[0], sigma_size, device=device)  # scalar
@@ -143,8 +154,8 @@ def des_initial_gen(dist_arr, sigmas, cutoff_distance):
     return s_ini, v_ini, t_ini
 
 
-# process the rudiment array for rotational invariance, des_arr with shape (grid, feature)
 def invariance_gen(s_ini, v_ini, t_ini):
+    """process the rudiment array for rotational invariance, des_arr with shape (grid, feature)"""
     device = s_ini.device
     sigma_size = s_ini.size()[1]  # the number of all sigmas
     descriptor_arr = torch.zeros(s_ini.size()[0], 5 * sigma_size, device=device)
@@ -167,11 +178,6 @@ def invariance_gen(s_ini, v_ini, t_ini):
                 t_ini[:, 1, 0, :] * t_ini[:, 2, 1, :] - t_ini[:, 1, 1, :] * t_ini[:, 2, 0, :])
 
     return descriptor_arr
-
-
-# a function used to standardize feature
-def standardize(input):
-    return (input - input.mean(0)) / input.std(0)
 
 # %%
 # class SVTFeature(object):

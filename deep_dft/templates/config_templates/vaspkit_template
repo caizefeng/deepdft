@@ -1,0 +1,28 @@
+# cp how_to_set_environment_variable ~/.vaspkit and modify the ~/.vaspkit file based on your settings!    
+VASP5                     .TRUE.             # .TRUE. or .FALSE.; Set .FALSE. if you are using vasp.4.x
+GGA_PATH                  ${vasp_repo}/PAW_GGA       #  Path of GGA potential.
+PBE_PATH                  ${vasp_repo}/PAW_PBE       #  Path of PBE potential.
+LDA_PATH                  ${vasp_repo}/US       #  Path of LDA potential.
+POTCAR_TYPE               $POTCAR_TYPE                          # PBE, PW91 or LDA; Set PBE if you want to make PBE-POTCAR file
+GW_POTCAR                 .FALSE.            # .TRUE. or .FALSE.; For example, H_GW, O_GW will be chose when POTCAR_GW = .TRUE.
+RECOMMENDED_POTCAR        $RECOMMENDED_POTCAR           # .TRUE. or .FALSE.; The recommended PAW potential will be chose when RECOMMENDED_POTCAR = .TRUE.
+SET_FERMI_ENERGY_ZERO     .TRUE.             # .TRUE. or .FALSE.; The Fermi Energy will be set to zero eV when SET_FERMI_ENERGY_ZERO = .TRUE.
+MINI_INCAR                .FALSE.            # .TRUE. or .FALSE.; A simplified INCAR will be written when MINI_INCAR = .TRUE.
+USER_DEFINED_INCAR        .FALSE.             # .TRUE. or .FALSE.; whether to use embedded INCAR templates or user defined INCAR templates
+SET_INCAR_WRITE_MODE      BACK-UP-OLD          #  OVERRIDE, APPEND, BACK-UP-OLD,BACK-UP-NEW;  "Customize INCAR File"  whether to override existing INCAR/appending existing INCAR/backup existing INCAR to INCAR.old && write into INCAR/write into INCAR.new
+WRITE_SELECTIVE_DYNAMICS  .FALSE.            # .TRUE. or .FALSE.; whether the selective dymanics set will be forced to write when SET_SELECTIVE_DYNAMICS_MODE = .FALSE.
+PYTHON_VERSION            3                 #  Python version is 2. SET it 3 if your python environment is python3
+PLOT_MATPLOTLIB           .FALSE.            #  Set it .TRUE. if you want to generate Graphs. (Matplotlib and Numpy packages MUST be embedded in Python)
+ADVANCED_USER             .TRUE.             #  VASPKIT0.72 has opened the user interface. Please fill in your settings in the block 'USER_DEFINED' if you want vaspkit to integrate your own scripts in the 'UTILITIES' file.
+VASPKIT_UTILITIES_PATH    /home/caizefeng/soft/vaspkit.1.12/utilities
+
+
+#USER_DEFINED
+#Synopsis:The first parameter is the command-id,starting with 'u'; the second is the interpreter, like 'python/bash/perl'(Please left it blank if you are using an executive binary); the third is the name of a script or an executive binary; the fourth one is a switch, if any extra argv is needed, please set if .TRUE. ; the last on is the description, MUST use '_' as delimiter.     
+#           id      interpreter      script          argv       description  
+#Example1  'u1        python      get_entropy.py    .TRUE.      get_entropy'
+#Example2  'u2                      hello.exe       .FALSE.     ls         '
+
+u1        python      get_entropy.py    .TRUE.      get_entropy_for_adsorbate
+u2        python      bader2pqr.py      .FALSE.     bader2pqr
+#END_USER_DEFINED 

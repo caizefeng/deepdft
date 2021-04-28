@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#PBS -m n
+#PBS -j oe
+#PBS -N $name
+#PBS -l nodes=$nodes:ppn=$ppn
+#PBS -l walltime=$time
+#PBS -l mem=$mem
+#PBS -e $$PBS_JOBID.e
+#PBS -o $$PBS_JOBID.o
+#PBS -q $queue
+#PBS -V
+
+$export
+
+cd $$PBS_O_WORKDIR

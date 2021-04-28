@@ -1,0 +1,48 @@
+DATE1=$$(date)
+# --- will be completed by Python --------------------------
+window_interval=$window_interval
+num_grid=$num_grid
+offset=$offset
+# ----------------------------------------------------------
+rm ../LDOS_all -rf
+mkdir ../LDOS_all
+rm POSCAR LOCPOT CHG CHGCAR PCDAT WAVECAR XDATCAR PROCAR OSZICAR DOSCAR EIGENVAL IBZKPT CONTCAR OUTCAR vasprun.xml PLANAR_AVERAGE.dat -f
+
+for i in POSCAR_*
+do
+
+    cp "$$i" POSCAR
+    cp ../CHGCAR_all/CHGCAR_"$${i#*_}" CHGCAR
+    echo "$$i"
+    echo -------------------------------------------------------------
+    mkdir ../LDOS_all/LDOS_"$${i#*_}"
+    sed -i '/EINT/d' INCAR
+
+    # have to perform scf calculation to get WAVECAR
+    $vasp_call
+    vacuum=$$(python ReadVacuumFromLOCPOT.py)
+    energy_mid=$$(echo "scale=4 ; $$vacuum - $$offset" | bc -l)
+
+    for j in $$(seq 0 $$((num_grid - 1)))
+    do
+        EINT_MID=$$(echo "scale=4 ; $$energy_mid + $$j * $$window_interval" | bc -l)
+        sed -i '/EINT/d' INCAR
+        EINT_BOTTOM=$$(echo "scale=4; $$EINT_MID - $$window_interval / 2" | bc -l)
+        EINT_TOP=$$(echo "scale=4; $$EINT_MID + $$window_interval / 2" | bc -l)
+        sed -i '$$aEINT = '$$EINT_BOTTOM' '$$EINT_TOP'' INCAR
+        cp ../CHGCAR_all/CHGCAR_"$${i#*_}" CHGCAR
+
+        $vasp_call
+
+        relative_E=$$(echo "scale=4; $$EINT_MID - $$vacuum" | bc -l)
+        mv PARCHG ../LDOS_all/LDOS_"$${i#*_}"/PARCHG_"$${i#*_}"_"$$relative_E"
+    done
+
+    echo -------------------------------------------------------------
+    rm POSCAR LOCPOT CHG CHGCAR PCDAT WAVECAR XDATCAR PROCAR OSZICAR DOSCAR EIGENVAL IBZKPT CONTCAR OUTCAR vasprun.xml PLANAR_AVERAGE.dat -f
+done
+
+
+DATE2=$$(date)
+echo -e "starting at:" "\t" "$$DATE1" >> timing.log
+echo -e "ending at:" "\t" "$$DATE2" >> timing.log

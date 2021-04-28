@@ -10,10 +10,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-import io_utils
-from ML_utils import standardization2D
-from SVTCharge import SVTNetCharge
-from parity_plot_charge import net_name_parse
+from deep_dft.plot.parity_plot_charge import net_name_parse
+from deep_dft.SVTCharge import SVTNetCharge
+from deep_dft.utils import read_utils
+from deep_dft.utils.ML_utils import standardization2D
 
 if __name__ == '__main__':
     net_file_name = "SVTCharge_batch_7000_lr_0.00025_epoch_50_data_STO_600_cut9_gauss16_dropout_0.0_0.0_0.0_fc_300_300_300.pt"
@@ -23,19 +23,26 @@ if __name__ == '__main__':
     cross_section = 1 / 2
 
     # recreate grid
-    vec, coor_list, chg, ngxf, ngyf, ngzf = io_utils.split_read_chgcar(test_structure_path)
+    vec, coor_list, chg, ngxf, ngyf, ngzf = read_utils.split_read_chgcar(test_structure_path)
     # vec = torch.from_numpy(vec)
     # grid_coor = feature_utils.grid_gen(ngxf, ngyf, ngzf, vec)
 
     # load net
+    # save as state_dict
     net = SVTNetCharge(num_element=3, sigma_size=16, **net_name_parse(net_file_name, is_temp=False)).to(torch.float64)
     net.load_state_dict(torch.load(os.path.join("nets", net_file_name)))
+
+    # as as net
+    # net = torch.load(os.path.join("nets", net_file_name))
+
+    net.eval()
     data = np.load(test_file_path)
 
     # load pre-calculated mean and std to make the prediction
     train_mean, train_std = standardization2D(read_saved=True, data_path=data_dir)
     charge_dft = data[:, -1]
-    charge_pred = net((torch.from_numpy(data[:, :-1]) - train_mean) / train_std).detach().numpy()
+    with torch.no_grad():
+        charge_pred = net((torch.from_numpy(data[:, :-1]) - train_mean) / train_std).numpy()
     # slice charge and reshape
     start_idx = int(ngxf * ngyf * ngzf * cross_section)
     end_idx = int(ngxf * ngyf * ngzf * cross_section + ngxf * ngyf)

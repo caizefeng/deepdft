@@ -1,0 +1,14 @@
+*.pyc
+*checkpoint.ipynb
+*.png
+*.log
+*.out
+*ipynb_checkpoints*
+
+*CHGCAR*
+*POSCAR*
+*PARCHG*
+events*
+.jupyter_symlinks
+.ipynb_checkpoints
+*.swp

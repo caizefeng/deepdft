@@ -6,19 +6,19 @@
 # @Software: PyCharm
 
 import os
+from typing import List
 
 import numpy as np
 import torch
 from torch.utils.data import Dataset
 
-import feature_utils
-import io_utils
+from deep_dft.utils import feature_utils, read_utils
 
 
-# extract atom coordinates, charge density values from CHGCAR
-# generate grid points according to NGF
-def data_from_chgcar(file_path, rough_cutoff, device):
-    vec, coor_list, chg, ngxf, ngyf, ngzf = io_utils.split_read_chgcar(file_path)
+def data_from_chgcar(file_path, rough_cutoff: int, device):
+    """extract atom coordinates, charge density values from CHGCAR,
+    generate grid points according to NGF"""
+    vec, coor_list, chg, ngxf, ngyf, ngzf = read_utils.split_read_chgcar(file_path)
     vec, coor_list, chg = feature_utils.np2torch(vec, coor_list, chg, device)
     atom_coor_list = feature_utils.dir2cart(vec, coor_list)
     atom_coor_list_pbc = []
@@ -30,9 +30,10 @@ def data_from_chgcar(file_path, rough_cutoff, device):
     return [atom_coor_list_pbc, grid_coor, charge_arr]
 
 
-# the total feature-generating routine
 class SVTFeature(object):
-    def __init__(self, cutoff, sigmas, device):
+    """the total feature-generating routine"""
+
+    def __init__(self, cutoff: List[int], sigmas, device):
         self.device = device
         self.cutoff = cutoff
         self.sigmas = sigmas
@@ -56,8 +57,9 @@ class SVTFeature(object):
         return descriptor_arr_all
 
 
-# every indexing loads data from one single CHGCAR, could be used in visualization
 class AtomGridChargeDataset(Dataset):
+    """every indexing loads data from one single CHGCAR, could be used in visualization"""
+
     def __init__(self, root_dir, rough_cutoff=9, device=None):
         if device is None:
             self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -78,8 +80,9 @@ class AtomGridChargeDataset(Dataset):
         return sample_dict
 
 
-# have to preprocess raw data by chunks
 class BatchSVTChargeDataset(Dataset):
+    """(have to) Preprocess raw data by chunks"""
+
     def __init__(self, sample, sigmas, cutoff=9 * torch.ones(3), preprocess_batch=50000, device=None):
         if device is None:
             self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -99,8 +102,9 @@ class BatchSVTChargeDataset(Dataset):
         return self.transform(self.atom_list, self.grid_list[idx]), self.charge_list[idx]
 
 
-# dataset from one file with memory mapping to reduce RSS
 class MmapDataset2D(Dataset):
+    """dataset from one file with memory mapping to reduce RSS"""
+
     def __init__(self, file_path, num_column, data_type="float64", offset=128):
         self.mmap = np.memmap(file_path, dtype=data_type, mode="r", offset=offset).reshape(-1, num_column)
 

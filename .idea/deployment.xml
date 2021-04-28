@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" serverName="BMSG_GPU" createEmptyFolders="true" exclude=".svn;.cvs;.idea;.DS_Store;.git;.hg;*.hprof;*.pyc;CHGCAR*;PARCHG*;POSCAR*;.ipynb_checkpoints;.jupyter_symlinks;*.swp;*.pt;*.npy;nohup.out;events*;runs;Datasets;nets" showAutoUploadSettingsWarning="false">
+    <serverData>
+      <paths name="BMSG_GPU">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/DeepDFT" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="Cavatina">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/DeepDFT" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="Cavatina_node">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="Spark319">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/DeepDFT" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="WHUT_CPU">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/DeepDFT" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="WHUT_GPU">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/DeepDFT" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>

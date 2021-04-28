@@ -1,0 +1,27 @@
+DATE1=$$(date)
+
+rm ../CHGCAR_all -rf
+mkdir ../CHGCAR_all
+
+rm ../LOCPOT_all -rf
+mkdir ../LOCPOT_all
+
+rm -f POSCAR
+
+for i in POSCAR_*
+do   
+    cp "$$i" POSCAR
+    
+    echo "$$i"
+    echo -------------------------------------------------------------
+    $vasp_call
+    echo -------------------------------------------------------------
+
+    mv CHGCAR ../CHGCAR_all/CHGCAR_"$${i#*_}"
+    mv LOCPOT ../LOCPOT_all/LOCPOT_"$${i#*_}"
+    rm POSCAR LOCPOT CHG CHGCAR PCDAT WAVECAR XDATCAR PROCAR OSZICAR DOSCAR EIGENVAL IBZKPT CONTCAR OUTCAR vasprun.xml -f
+done
+
+DATE2=$$(date)
+echo -e "starting at:" "\t" "$$DATE1" >> timing.log
+echo -e "ending at:" "\t" "$$DATE2" >> timing.log

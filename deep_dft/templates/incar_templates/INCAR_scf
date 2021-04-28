@@ -1,0 +1,32 @@
+#INCAR for self-consistent calculation for DeepDFT
+Global Parameters
+ISTART =  0            (Read existing wavefunction; if there)
+# ISPIN =  2           (Spin polarised DFT)
+ICHARG =  2        (Non-self-consistent: GGA/LDA band structures)
+LREAL  = Auto       (Projection operators: automatic)
+ENCUT  =  520        (Cut-off energy for plane wave basis set, in eV)
+PREC   =  Normal       (Precision level)
+ALGO   = Normal
+LWAVE  = .FALSE.        (Write WAVECAR or not)
+LCHARG = .TRUE.        (Write CHGCAR or not)
+# ADDGRID= .TRUE.        (Increase grid; helps GGA convergence)
+# LVTOT  = .TRUE.      (Write total electrostatic potential into LOCPOT or not)
+LVHAR  = .TRUE.      (Write ionic + Hartree electrostatic potential into LOCPOT or not)
+# NELECT =             (No. of electrons: charged cells; be careful)
+# LPLANE = .TRUE.      (Real space distribution; supercells)
+NPAR   = 4           (Max is no. nodes; don't set for hybrids)
+# NWRITE = 2           (Medium-level output)
+# KPAR   = 2           (Divides k-grid into separate groups)
+# NGX    = 500         (FFT grid mesh density for nice charge/potential plots)
+# NGY    = 500         (FFT grid mesh density for nice charge/potential plots)
+# NGZ    = 500         (FFT grid mesh density for nice charge/potential plots)
+ 
+Static Calculation
+ISMEAR =  -5            (gaussian smearing method)
+SIGMA  =  0.2         (please check the width of the smearing)
+LORBIT =  11           (PAW radii for projected DOS)
+# NEDOS  =  2001         (DOSCAR points)
+NELMIN = 5
+NELM   =  150        (Max electronic SCF steps)
+EDIFF  =  1E-06        (SCF energy convergence; in eV)
+ 
