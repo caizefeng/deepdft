@@ -1,2 +1,2 @@
 # DeepDFT
-SVT-featured deep-learning DFT code
+SVT-featured deep-learning surrogate model for DFT
